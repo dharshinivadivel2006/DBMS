@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>AgriCare DBMS | Role-Based Agricultural System with User Input</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0b2f1f 0%, #1e4d2e 50%, #d4e8ca 100%);
+        }
+
+        /* Auth Container */
+        .auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a2a1c, #1f5438);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 2rem;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 1.8rem;
+        }
+
+        .auth-header h1 {
+            color: #1e3a2f;
+            font-size: 1.8rem;
+        }
+
+        .auth-header p {
+            color: #6b8c5c;
+            font-size: 0.85rem;
+        }
+
+        .role-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e2ecd9;
+        }
+
+        .role-tab {
+            flex: 1;
+            padding: 0.8rem;
+            background: none;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            color: #5a7a4a;
+            transition: 0.2s;
+            border-radius: 2rem 2rem 0 0;
+        }
+
+        .role-tab.active {
+            color: #f5b042;
+            border-bottom: 3px solid #f5b042;
+            background: #fef9e6;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active-form {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: #2c5a2e;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #cde0c2;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #4c9f70;
+            box-shadow: 0 0 0 3px rgba(76, 159, 112, 0.2);
+        }
+
+        .auth-btn {
+            width: 100%;
+            background: #2b5e3b;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 2rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        .switch-text {
+            text-align: center;
+            margin-top: 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        .switch-link {
+            color: #f5b042;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .error-msg {
+            color: #c0392b;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        /* Dashboard Styles */
+        .dashboard-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            background: #1e3a2f;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo-area h2 {
+            font-size: 1.5rem;
+        }
+
+        .logo-area p {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .user-info-card {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: #2c5a3e;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+        }
+
+        .user-badge {
+            background: #f5b042;
+            padding: 0.3rem 0.9rem;
+            border-radius: 2rem;
+            color: #1e3a2f;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .logout-btn {
+            background: #c0392b;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 2rem;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .main-dashboard {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #f5b042;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-card h4 {
+            color: #6b8c5c;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e3a2f;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #d4e2cc;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #4a6741;
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            color: #f5b042;
+            border-bottom: 3px solid #f5b042;
+        }
+
+        /* Form Sections */
+        .form-section {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1.5px solid #e2ecd9;
+            border-radius: 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #4c9f70;
+        }
+
+        label {
+            font-weight: 600;
+            color: #2c5a2e;
+            display: block;
+            margin-bottom: 0.2rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-primary {
+            background: #2b5e3b;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #1f482e;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #c0392b;
+        }
+
+        .btn-secondary {
+            background: #7f8c8d;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 1.2rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        th {
+            background: #eaf4e3;
+            padding: 10px;
+            text-align: left;
+            color: #1e3a2f;
+        }
+
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eef3e8;
+        }
+
+        .action-btn {
+            padding: 3px 8px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 0.8rem;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .delete-btn {
+            background: #c0392b;
+            color: white;
+        }
+
+        .empty-row td {
+            text-align: center;
+            padding: 1.5rem;
+            color: #8ba888;
+        }
+
+        .private-badge {
+            background: #e67e22;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .success-msg {
+            background: #4c9f70;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-dashboard { padding: 1rem; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- AUTHENTICATION CONTAINER -->
+<div id="authContainer" class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>🌾 AgriCare DBMS</h1>
+            <p>Role-Based Access | Farmers See Only Their Own Data</p>
+        </div>
+
+        <div class="role-tabs">
+            <button class="role-tab active" onclick="switchAuthRole('farmer')">👨‍🌾 Farmer</button>
+            <button class="role-tab" onclick="switchAuthRole('manager')">📊 Manager</button>
+        </div>
+
+        <div id="loginForm" class="auth-form active-form">
+            <h3 style="margin-bottom: 1rem;">🔐 Login to Your Account</h3>
+            <div class="input-group">
+                <label>📧 Email</label>
+                <input type="text" id="loginEmail" placeholder="Enter registered email">
+            </div>
+            <div class="input-group">
+                <label>🔒 Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password">
+            </div>
+            <button class="auth-btn" onclick="handleLogin()">🔓 Login</button>
+            <div class="switch-text">
+                New user? <span class="switch-link" onclick="toggleAuthMode('signup')">Create Account</span>
+            </div>
+            <div id="loginError" class="error-msg"></div>
+            <div style="margin-top: 1rem; background: #eef3e8; padding: 0.8rem; border-radius: 1rem; font-size: 0.7rem;">
+                <strong>📁 Demo Accounts:</strong><br>
+                👨‍🌾 <strong>Farmer (Ramesh)</strong>: farmer@agri.com / farmer123<br>
+                📊 <strong>Manager</strong>: manager@agri.com / manager123<br>
+                ✨ <strong>New users:</strong> Sign up as Farmer or Manager
+            </div>
+        </div>
+
+        <div id="signupForm" class="auth-form">
+            <h3 style="margin-bottom: 1rem;">📝 Create New Account</h3>
+            <div class="input-group">
+                <label>👤 Full Name *</label>
+                <input type="text" id="signupName" placeholder="Enter your full name">
+            </div>
+            <div class="input-group">
+                <label>📧 Email Address *</label>
+                <input type="email" id="signupEmail" placeholder="you@example.com">
+            </div>
+            <div class="input-group">
+                <label>🔑 Password *</label>
+                <input type="password" id="signupPassword" placeholder="Min 6 characters">
+            </div>
+            <div class="input-group">
+                <label>📞 Contact Number</label>
+                <input type="text" id="signupContact" placeholder="+91 9876543210">
+            </div>
+            <div class="input-group" id="farmerExtraFields">
+                <label>🌾 Village / District</label>
+                <input type="text" id="signupVillage" placeholder="e.g., Solapur, Maharashtra">
+                <label style="margin-top: 8px;">📏 Farm Area (acres)</label>
+                <input type="number" id="signupArea" placeholder="e.g., 5.5">
+                <label style="margin-top: 8px;">🧪 Soil Type</label>
+                <select id="signupSoil">
+                    <option>Loamy</option><option>Clayey</option><option>Sandy</option><option>Peaty</option>
+                </select>
+            </div>
+            <button class="auth-btn" onclick="handleSignup()">✅ Create Account</button>
+            <div class="switch-text">
+                Already have an account? <span class="switch-link" onclick="toggleAuthMode('login')">Login Here</span>
+            </div>
+            <div id="signupError" class="error-msg"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div id="dashboardApp" class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="logo-area">
+            <h2>🌱 AgriCare DBMS</h2>
+            <p id="accessModeText">🔒 Private Data View</p>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div class="user-info-card">
+                <span>👤 <strong id="currentUserName">User</strong></span>
+                <span class="user-badge" id="currentUserRole">Farmer</span>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <div class="main-dashboard">
+        <div id="successMsg" class="success-msg"></div>
+        
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card"><h4>👨‍🌾 My Profile</h4><div class="stat-number" id="totalFarmersStat">0</div></div>
+            <div class="stat-card"><h4>🌾 My Fields</h4><div class="stat-number" id="totalFieldsStat">0</div></div>
+            <div class="stat-card"><h4>🌽 My Crops</h4><div class="stat-number" id="totalCropsStat">0</div></div>
+            <div class="stat-card"><h4>🧪 Soil Tests</h4><div class="stat-number" id="totalSoilStat">0</div></div>
+            <div class="stat-card"><h4>💧 Irrigations</h4><div class="stat-number" id="totalIrriStat">0</div></div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('profile')">👤 My Profile</button>
+            <button class="tab-btn" onclick="switchTab('field')">🌾 Fields</button>
+            <button class="tab-btn" onclick="switchTab('crop')">🌽 Crops</button>
+            <button class="tab-btn" onclick="switchTab('soil')">🧪 Soil</button>
+            <button class="tab-btn" onclick="switchTab('weather')">☁️ Weather</button>
+            <button class="tab-btn" onclick="switchTab('irrigation')">💧 Irrigation</button>
+            <button class="tab-btn" id="managerTab" onclick="switchTab('allFarmers')" style="display: none;">👥 All Farmers</button>
+        </div>
+
+        <!-- PROFILE SECTION -->
+        <div id="profileSection" class="tab-content">
+            <div class="form-section" id="profileFormSection">
+                <h3>📝 Update My Profile</h3>
+                <div class="form-grid">
+                    <div><label>Full Name</label><input type="text" id="profileName" class="input-field"></div>
+                    <div><label>📧 Email</label><input type="email" id="profileEmail" class="input-field" readonly style="background:#f5f5f5;"></div>
+                    <div><label>📞 Contact</label><input type="text" id="profileContact" class="input-field"></div>
+                    <div><label>🌾 Village</label><input type="text" id="profileVillage" class="input-field"></div>
+                    <div><label>📏 Farm Area (acres)</label><input type="number" id="profileArea" class="input-field" step="0.1"></div>
+                    <div><label>🧪 Soil Type</label><select id="profileSoil" class="input-field"><option>Loamy</option><option>Clayey</option><option>Sandy</option><option>Peaty</option></select></div>
+                    <div><label>💧 Irrigation Type</label><select id="profileIrrigation" class="input-field"><option>Drip</option><option>Furrow</option><option>Sprinkler</option><option>Flood</option></select></div>
+                </div>
+                <button class="btn-primary" onclick="updateProfile()">💾 Update Profile</button>
+            </div>
+        </div>
+
+        <!-- FIELD SECTION -->
+        <div id="fieldSection" class="tab-content" style="display: none;">
+            <div class="form-section">
+                <h3>🌾 Add New Field</h3>
+                <div class="form-grid">
+                    <div><label>Field Location</label><input type="text" id="fieldLocation" class="input-field" placeholder="e.g., North Field, Near River"></div>
+                    <div><label>Soil Type</label><select id="fieldSoil" class="input-field"><option>Loamy</option><option>Clayey</option><option>Sandy</option><option>Peaty</option></select></div>
+                </div>
+                <button class="btn-primary" onclick="addField()">➕ Add Field</button>
+            </div>
+            <div class="table-container"><h3>🌾 My Fields</h3><table id="fieldTable"><thead><tr><th>Field ID</th><th>Location</th><th>Soil Type</th><th>Actions</th></thead><tbody id="fieldTableBody"></tbody></table></div>
+        </div>
+
+        <!-- CROP SECTION -->
+        <div id="cropSection" class="tab-content" style="display: none;">
+            <div class="form-section">
+                <h3>🌾 Add Crop Record</h3>
+                <div class="form-grid">
+                    <div><label>Select Field</label><select id="cropFieldId" class="input-field"></select></div>
+                    <div><label>Crop Type</label><input type="text" id="cropType" class="input-field" placeholder="e.g., Basmati Rice"></div>
+                    <div><label>Season</label><input type="text" id="season" class="input-field" placeholder="Kharif 2025"></div>
+                    <div><label>Weather Impact</label><select id="weatherImpact" class="input-field"><option>Optimal</option><option>Drought Risk</option><option>Excess Rain</option><option>Temperature Stress</option></select></div>
+                    <div><label>Yield (kg/ha)</label><input type="number" id="yieldKg" class="input-field"></div>
+                    <div><label>Health Status</label><select id="healthStatus" class="input-field"><option>Excellent</option><option>Good</option><option>Moderate</option><option>Needs Care</option></select></div>
+                </div>
+                <button class="btn-primary" onclick="addCropRecord()">📊 Save Crop</button>
+            </div>
+            <div class="table-container"><h3>📋 My Crop Records</h3><table id="cropTable"><thead><tr><th>Field</th><th>Crop</th><th>Season</th><th>Weather</th><th>Yield</th><th>Health</th><th>Actions</th></thead><tbody id="cropTableBody"></tbody></table></div>
+        </div>
+
+        <!-- SOIL SECTION -->
+        <div id="soilSection" class="tab-content" style="display: none;">
+            <div class="form-section"><h3>🧪 Add Soil Test</h3><div class="form-grid"><div><label>Select Field</label><select id="soilFieldId" class="input-field"></select></div><div><label>pH Level</label><input type="number" id="phLevel"
